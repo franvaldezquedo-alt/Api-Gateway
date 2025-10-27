@@ -1,47 +1,56 @@
 server:
-  port: 8080
+  port: 8087
 
 spring:
-  segurity:
-    oauth2:
-      resourceserver:
-        jwt:
-          secret: dfgrt34dgdfg
-          issuer-uri: http://localhost:8081/auth/realms/myrealm
-
   application:
     name: api-gateway
 
   cloud:
     gateway:
       routes:
+        # Servicio de autenticación (público)
+        - id: auth-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+
+        # Servicio de cuentas
         - id: account-service
           uri: http://localhost:8082
           predicates:
             - Path=/account/**
           filters:
             - StripPrefix=1
+            - JwtAuthFilter
 
+        # Servicio de clientes
         - id: customer-service
           uri: http://localhost:8083
           predicates:
             - Path=/customer/**
           filters:
             - StripPrefix=1
+            - JwtAuthFilter
 
+        # Servicio de transacciones
         - id: transaction-service
           uri: http://localhost:8084
           predicates:
             - Path=/transaction/**
           filters:
             - StripPrefix=1
+            - JwtAuthFilter
 
+        # Servicio de créditos
         - id: credit-service
           uri: http://localhost:8085
           predicates:
             - Path=/credit/**
           filters:
             - StripPrefix=1
+            - JwtAuthFilter
 
       # Configuración CORS global
       globalcors:
@@ -59,13 +68,17 @@ spring:
             allowCredentials: true
             maxAge: 3600
 
-# Logging detallado para Gateway
+# Clave secreta usada por JwtAuthFilter
+jwt:
+  secret: mySecretKeyForBankingSystemNttDataBootcamp2024MustBeLongEnoughForHS512
+
+# 🪵 Logging detallado
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.web: INFO
 
-# Actuator habilitado para inspección de rutas
+# 🩺 Actuator (para inspeccionar rutas)
 management:
   endpoints:
     web:
